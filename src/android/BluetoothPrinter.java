@@ -103,6 +103,15 @@ public class BluetoothPrinter extends CordovaPlugin {
 				e.printStackTrace();
 			}
 			return true;
+		} else if (action.equals("printFile")) {
+			try {
+				String filePath = args.getString(0);
+				printFile(callbackContext, filePath);
+			} catch (IOException e) {
+				Log.e(LOG_TAG, e.getMessage());
+				e.printStackTrace();
+			}
+			return true;
 		}
 		return false;
 	}
@@ -546,6 +555,55 @@ public class BluetoothPrinter extends CordovaPlugin {
 		}
 		f = 0;
 		return yuv420sp;
+	}
+
+		//This will read file and send data to bluetooth printer
+	boolean printFile(CallbackContext callbackContext, String filePath) throws IOException {
+		try {
+
+			String file = filePath;
+			String path = "/storage/emulated/0/spc.dat";
+			String line = null;
+			String log = null;
+
+			try {
+
+				FileInputStream fileInputStream = new FileInputStream(new File(path));
+				InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
+				BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+				StringBuilder stringBuilder = new StringBuilder();
+
+				while ((line = bufferedReader.readLine()) != null) {
+					stringBuilder.append(line + System.getProperty("line.separator"));
+					log = stringBuilder.toString();
+				}
+
+				fileInputStream.close();
+				// inputStream.close();
+
+				line = stringBuilder.toString();
+
+				bufferedReader.close();
+			} catch (FileNotFoundException ex) {
+				Log.d(LOG_TAG, ex.getMessage());
+			} catch (IOException ex) {
+				Log.d(LOG_TAG, ex.getMessage());
+			}
+
+			mmOutputStream.write(line.getBytes("TIS-620"));
+			callbackContext.success("String text = " + line + "\n" + log);
+
+			// test read file
+
+			return true;
+
+		} catch (Exception e) {
+			String errMsg = e.getMessage();
+			Log.e(LOG_TAG, errMsg);
+			e.printStackTrace();
+			callbackContext.error(errMsg);
+		}
+		return false;
 	}
 
 }
